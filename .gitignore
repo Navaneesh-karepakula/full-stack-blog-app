@@ -1,0 +1,14 @@
+# === Server ===
+server/node_modules/
+server/dist/
+server/build/
+server/logs/
+server/.env
+
+# === Root-level files ===
+.env
+*.log
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
