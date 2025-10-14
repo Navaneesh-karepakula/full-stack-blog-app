@@ -1,34 +1,65 @@
-import React,{useState,useEffect} from 'react'
-import {useParams} from 'react-router-dom'
-import { assets, blog_data} from './../assets/assets';
+import React, { useState, useEffect } from 'react'
+import { useParams } from 'react-router-dom'
+import { assets, blog_data } from './../assets/assets';
 import { comments_data } from './../assets/assets';
 import Navbar from './../components/Navbar';
 import Moment from 'moment'
+import { useAppContext } from '../../context/AppContext';
 const Blog = () => {
 
-  const {id} =useParams()
+  const { id } = useParams()
+  const { axios } = useAppContext
   const [data, setdata] = useState(null)
   const [comments, setComments] = useState([])
   const [name, setName] = useState('')
   const [content, setContent] = useState('')
-  const fetchBlogData= async ()=>{
-    const data=blog_data.find(item=>item._id===id)
-    setdata(data)
+  const fetchBlogData = async () => {
+    try {
+      const { data } = await axios.get(`/api/blog/${id}`)
+      data.success ? setData(data.blog) : toast.error(data.message)
+    } catch (error) {
+      toast.error(error.message)
+    }
   }
-  const fetchComments= async ()=>{
-    setComments(comments_data)
+  const fetchComments = async () => {
+    try {
+      const { data } = await axios.post('/api/blog/comments', { blogId: id })
+      if (data.success) {
+        setComments(data.comments)
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error(error.message);
+
+    }
   }
-  const addComment=async (e)=>{
+  const addComment = async (e) => {
     e.preventDefault();
+    try {
+      const { data } = await axios.post('/api/blog/add-comment', {
+        blog: id, name,
+        content
+      });
+      if (data.success) {
+        toast.success(data.message)
+        setName('')
+        setContent('')
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
   }
   useEffect(() => {
     fetchBlogData()
     fetchComments()
   }, [])
-  
-  return data? (
+
+  return data ? (
     <div className='relative'>
-      <Navbar/>
+      <Navbar />
       <div className='text-center mt-20 text-gray-600'>
         <p className='text-primary py-4 font-medium'>Published on {Moment(data.createdAt).format("MMM Do YYYY")}</p>
         <h1 className='text-2xl sm:text-5xl font-semibold max-w-2xl mx-auto text-gray-800'>{data.title}</h1>
@@ -37,13 +68,13 @@ const Blog = () => {
       </div>
       <div className='mx-5 max-w-5xl md:mx-auto my-10 mt-6'>
         <img src={data.image} alt="" className='rounded-3xl mb-5' />
-        <div className='rich-text max-w-3xl' dangerouslySetInnerHTML={{__html:data.description}}></div>
+        <div className='rich-text max-w-3xl' dangerouslySetInnerHTML={{ __html: data.description }}></div>
       </div>
       <div className='max-w-3xl mt-14 mb-10 mx-auto '>
         <p>comments({comments.length})</p>
         <div className='flex flex-col gap-4 '>
           {
-            comments.map((item,index)=>(
+            comments.map((item, index) => (
               <div key={index} className='relative bg-primary/2 border border-primary/5 max-w-xl p-4 rounded text-gray-600'>
                 <div className='flex items-center gap-2 mb-2'>
                   <img src={assets.user_icon} alt="" className='w-6' />
@@ -67,8 +98,8 @@ const Blog = () => {
           Add Your Comment
         </p>
         <form onSubmit={addComment} className='flex flex-col items-start gap-4 max-w-lg'>
-          <input onChange={(e)=>setName(e.target.value)} value={name} type="text" placeholder='Name' required className='w-full p-2 border border-gray-300 rounded outline-none' />
-          <textarea onChange={(e)=>setContent(e.target.value)} value={content} placeholder='comment' className='w-full p-2 border border-gray-300 rounded outline-none h-48' required></textarea>
+          <input onChange={(e) => setName(e.target.value)} value={name} type="text" placeholder='Name' required className='w-full p-2 border border-gray-300 rounded outline-none' />
+          <textarea onChange={(e) => setContent(e.target.value)} value={content} placeholder='comment' className='w-full p-2 border border-gray-300 rounded outline-none h-48' required></textarea>
           <button type="submit" className='bg-primary text-white rounded p-2 px-8 hover:scale-105 transition-all cursor-pointer'>Submit</button>
         </form>
       </div>
@@ -83,9 +114,9 @@ const Blog = () => {
         </div>
       </div>
     </div>
-    
 
-  ):<div>Loading...</div>
+
+  ) : <div>Loading...</div>
 }
 
 export default Blog
